@@ -16,8 +16,7 @@ NIK SDK客户端接入帮助文档
             1.3.7 3.7 用户中心接口
             1.3.8 3.8 登录成功后角色信息上传接口
             1.3.9 3.9 角色升级后角色信息上传接口
-            1.3.10 3.10 微信登陆类型设置
-            1.3.11 3.11 切换账号接口
+            1.3.10 3.10 切换账号接口
       1.44 其他接口
             1.4.1 4.1获取渠道版本号
             1.4.2 4.2获取渠道ID
@@ -38,213 +37,78 @@ JAVA游戏客户端接入
 ----------------------
 此文档为Android原生游戏接入文档，分以下两个版本
 
-去除支付版：去除了所有有关支付的接口，jar文件，接入时，mainfast中有关爱贝的acitvity和 permission都可去掉。
+去除支付版：去除了所有有关支付的接口，jar文件，接入时，mainfast中有关支付的acitvity和 permission都可去掉。
 
-支付版：添加爱贝支付，按文档接入即可。
+支付版：添加微信、支付宝、银联支付，按文档接入即可。
 
 2 接入准备
 ----------------
 ###2.1 工程导入
 将NKDemo项目中的assets目录下的文件复制到游戏项目的assets目录
 将NKSDK项目中的libs目录下的文件复制到游戏项目的libs目录 （也可以直接导入NKSDK项目，然后配置游戏项目依赖NKSDK项目即可）
-修改assets目录下的config.properties文件里的IAppPay_AppID（爱贝支付）和Wechat_APPID（微信）
 ###2.2 配置AndroidManifest.xml
 在<application>标签中添加权限声明：
 ```
-   <uses-permission android:name="android.permission.INTERNET" />
-   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-   <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-   <uses-permission android:name="android.permission.SET_DEBUG_APP" />
-   <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-   <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-   <uses-permission android:name="android.permission.SEND_SMS" />
-   <uses-permission android:name="android.permission.VIBRATE" />
-   <uses-permission android:name="android.permission.CALL_PHONE" />
-   <uses-permission android:name="android.permission.GET_PACKAGE_SIZE" />
-   <uses-permission android:name="android.permission.WRITE_SETTINGS" />
-   <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
-   <uses-permission android:name="android.permission.RECORD_AUDIO" />
-   <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-   <uses-feature android:name="android.hardware.camera" />
-   <uses-permission android:name="android.permission.CAMERA" />
-   <uses-feature android:name="android.hardware.camera.autofocus" />
-   <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
-   <uses-permission android:name="android.permission.RECORD_VIDEO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.SET_DEBUG_APP" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <!-- 定位 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <!-- SDK2.1新增获取用户位置信息 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.GET_TASKS"/>
+
+    <!-- 支付宝权限 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
    ```
 在Application节点下增加以下Activity:
 ```
-       <activity
-               android:name="com.nkgame.SDKActivity"
-               android:windowSoftInputMode="adjustPan|stateHidden"
-               android:configChanges="orientation|screenSize|keyboardHidden"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"
-               >
-       </activity>
-       <activity
-               android:name="com.iapppay.account.channel.ipay.ui.LoginActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"
-               android:launchMode="singleTask" >
-       </activity>
-       <activity
-               android:name="com.iapppay.account.channel.ipay.ui.RegistActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"
-               android:launchMode="singleTask" >
-       </activity>
-       <activity
-               android:name="com.iapppay.account.channel.ipay.ui.RegSetPwdActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"
-               android:launchMode="singleTask" >
-       </activity>
-       <activity
-               android:name="com.iapppay.account.channel.ipay.ui.WebActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"
-               android:launchMode="singleInstance" >
-       </activity>
-       <activity
-               android:name="com.iapppay.ui.activity.AccountCheckPasswordActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-       <activity
-               android:name="com.iapppay.pay.channel.weixinpay.WeixinWapPayActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent" />
-       <activity
-               android:name="com.iapppay.ui.activity.AccountModifyPasswordActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"  />
-       <activity
-               android:name="com.iapppay.ui.activity.AccountSmallAmountPasswordActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"  />
-       <activity
-               android:name="com.iapppay.ui.activity.AccountSmallAmountValueActivty"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"  />
-       <activity
-               android:name="com.iapppay.ui.activity.ServiceCenterActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-       <activity
-               android:name="com.iapppay.ui.activity.AccountBindActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-       <activity
-               android:name="com.iapppay.fastpay.ui.InputBankCarNoActivity"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"
-               android:launchMode="singleTask" >
-       </activity>
-       <activity
-               android:name="com.iapppay.fastpay.ui.InputBankCarMoreInfoActivity"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"
-               android:launchMode="singleTask" >
-       </activity>
-       <activity
-               android:name="com.iapppay.fastpay.ui.VerificationCodeActivity"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"
-               android:launchMode="singleTask" >
-       </activity>
-       <activity android:name="com.iapppay.fastpay.ui.CommonWebActivity"
-                 android:theme="@android:style/Theme.Translucent.NoTitleBar" >
-       </activity>
-       <activity
-               android:name="com.iapppay.ui.activity.normalpay.PayHubActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar" >
-       </activity>
-       <activity
-               android:name="com.iapppay.ui.activity.minipay.MiniPayHubActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:launchMode="singleTask"
-               android:theme="@android:style/Theme.Translucent" >
-       </activity>
-       <activity
-               android:name="com.iapppay.ui.activity.iapppay.IAppPayHubActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:launchMode="singleTask"
-               android:theme="@android:style/Theme.Translucent" >
-       </activity>
-       <activity
-               android:name="com.iapppay.ui.activity.SelectAmountActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"
-               android:launchMode="singleTask" >
-       </activity>
-       <activity
-               android:name="com.iapppay.ui.activity.minipay.BankCardActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"  />
-       <activity
-               android:name="com.iapppay.ui.activity.normalpay.ChargeActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"
-               android:launchMode="singleTask" >
-       </activity>
-       <activity
-               android:name="com.iapppay.pay.channel.gamepay.GamepayActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar"
-               android:launchMode="singleTask" >
-       </activity>
-       <activity
-               android:name="com.iapppay.pay.channel.unionpay.UpPayResultActivity"
-               android:configChanges="orientation|keyboardHidden"
-               android:theme="@android:style/Theme.Translucent" />
-       <activity
-               android:name="com.unionpay.uppay.PayActivity"
-               android:configChanges="orientation|keyboardHidden|screenSize"
-               android:excludeFromRecents="true"
-               android:label="@string/app_name"
-               android:screenOrientation="portrait" />
-       <activity
-               android:name="com.alipay.sdk.app.H5PayActivity"
-               android:configChanges="orientation|keyboardHidden|navigation"
-               android:exported="false"
-               android:screenOrientation="behind"
-               android:windowSoftInputMode="adjustResize|stateHidden" >
-       </activity>
-       <activity
-               android:name="com.iapppay.pay.channel.tenpay.wap.TenpayWapPayActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent" />
-       <activity
-               android:name="com.iapppay.pay.channel.tenpay.wap.WebActivity"
-               android:configChanges="screenSize|orientation|keyboard|navigation|layoutDirection"
-               android:theme="@android:style/Theme.Translucent.NoTitleBar" >
-       </activity>
-       <activity
-               android:name="com.iapppay.pay.channel.ecopay2.EcoPay2ResultActivity"
-               android:configChanges="orientation|keyboardHidden"
-               android:theme="@android:style/Theme.Translucent" />
-       <activity
-               android:name="com.payeco.android.plugin.PayecoPluginLoadingActivity"
-               android:launchMode="singleTask"
-               android:screenOrientation="portrait" />
-       <activity
-               android:name="com.payeco.android.plugin.PayecoCameraActivity"
-               android:screenOrientation="portrait" />
-       <activity
-               android:name="com.payeco.android.plugin.PayecoVedioActivity"
-               android:process="com.payeco.android.plugin.vedio"
-               android:screenOrientation="landscape" />
-	<activity
-            android:name="（项目包名）.wxapi.WXEntryActivity"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:launchMode="singleTop"
-            android:theme="@android:style/Theme.Translucent" />
-        <receiver
-            android:name="（项目包名）.AppRegister"
-            android:permission="com.tencent.mm.plugin.permission.SEND" >
-            <intent-filter>
-                <action android:name="com.tencent.mm.plugin.openapi.Intent.ACTION_REFRESH_WXAPP" />
-            </intent-filter>
-        </receiver>
+      <activity
+            android:name="com.nkgame.SDKActivity"
+            android:windowSoftInputMode="adjustPan|stateHidden"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            >
+        </activity>
+        <activity
+            android:name="com.nkgame.SDKPayActivity"
+            android:windowSoftInputMode="adjustPan|stateHidden"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            >
+        </activity>
+        <!-- alipay sdk begin -->
+        <activity
+            android:name="com.alipay.sdk.app.H5PayActivity"
+            android:configChanges="orientation|keyboardHidden|navigation|screenSize"
+            android:exported="false"
+            android:screenOrientation="behind"
+            android:windowSoftInputMode="adjustResize|stateHidden" >
+        </activity>
+        <activity
+            android:name="com.alipay.sdk.app.H5AuthActivity"
+            android:configChanges="orientation|keyboardHidden|navigation"
+            android:exported="false"
+            android:screenOrientation="behind"
+            android:windowSoftInputMode="adjustResize|stateHidden" >
+        </activity>
 ```
 
 3 接口接入
@@ -404,13 +268,8 @@ NKBaseSDK.getInstance().roleLevelup(String roleID,String roleName,String roleLev
      roleCT ：角色创建Unix时间戳（秒）
 ```  
  接口说明： 角色升级后上传角色信息
-###3.10 微信登陆类型设置（需签名后才能调用）
-    1.在Assest下的config.properties 文件中配置wechat_APPID改为自己项目所申请的微信appid，
-    2.NKDemo 下面的com.nkgame.demo.wxapi 为微信登录包，在配置时包名需改成项目包名+wxapi  
-    WXEntryActivity.java文件复制到该包名下即可
-    3.详情可参考：https://open.weixin.qq.com
  
-3.11 切换账号
+3.10 切换账号
 ------------------------------------------
 ```
 NKBaseSDK.getInstance().switchAccount(String lineID,String lineName)
@@ -459,10 +318,10 @@ json object仅当errorcode 为0时才保证有效，如果errorcode不为0，请
    参数说明：
      errorcode 为0表示成功，-1表示未知错误,1表示用户取消（用户取消后请自行再次调用login或者等待用户再次点击登录按钮调用Login）
      uuid字段为拟酷平台转换后用来验证token的用户id，extra字段下的uuid字段为此渠道自身的用户id，如有疑问，请联系技术解释
-     extra字段下的loginType中的值表示此次应用宝登录的类型，分别为wechat和qq，全小写
      json 格式如下
 ```      
- {"result":0,"uuid":"123456789","token":"asdfzxcvasdfqwer","extra":     {"uuid":"b95de17361f01369b2c3534176928b62","loginType":"wechat"}}
+ {"result":0,"uuid":"123456789","token":"asdfzxcvasdfqwer",
+ "extra": {"uuid":"b95de17361f01369b2c3534176928b62","loginType":""}}
 ```
 ###5.3 onLogout
  调用登出接口之后收到此回调
