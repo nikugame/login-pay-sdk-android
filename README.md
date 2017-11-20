@@ -14,9 +14,11 @@ NIK SDK客户端接入帮助文档
             1.3.5 3.5 退出接口
             1.3.6 3.6 登出接口
             1.3.7 3.7 用户中心接口
-            1.3.8 3.8 登录成功后角色信息上传接口
-            1.3.9 3.9 角色升级后角色信息上传接口
-            1.3.10 3.10 切换账号接口
+            1.3.8 3.8 用户创建角色时接口
+            1.3.9 3.9 登录成功后角色信息上传接口
+            1.3.10 3.10 角色升级后角色信息上传接口
+            1.3.11 3.11 切换账号接口
+            1.3.12 3.12 进入（开始）游戏
       1.44 其他接口
             1.4.1 4.1获取渠道版本号
             1.4.2 4.2获取渠道ID
@@ -43,10 +45,10 @@ JAVA游戏客户端接入
 
 2 接入准备
 ----------------
-###2.1 工程导入
+### 2.1 工程导入
 将NKDemo项目中的assets目录下的文件复制到游戏项目的assets目录
 将NKSDK项目中的libs目录下的文件复制到游戏项目的libs目录 （也可以直接导入NKSDK项目，然后配置游戏项目依赖NKSDK项目即可）
-###2.2 配置AndroidManifest.xml
+### 2.2 配置AndroidManifest.xml
 在<application>标签中添加权限声明：
 ```
     <uses-permission android:name="android.permission.INTERNET" />
@@ -115,17 +117,18 @@ JAVA游戏客户端接入
 ----------------------------
 必须接入的接口：初始化接口、生命周期接口、支付接口、退出接口
 可选接口：用户中心接口
-###3.1 初始化接口
+### 3.1 初始化接口（必接）
    在游戏的第一个Activity(非闪屏Activity)中 onCreate() 方法中调用NKBaseSDK.getInstance().init方法,第一个参数是游戏的activity，第二个参数是游戏ID，第三个参数是游戏名称，第四个参数是是否横屏，第五个参数是游戏接收SDK的回调类
   ```
    @Override
    protected void onCreate(Bundle savedInstanceState) {
        super.onCreate(savedInstanceState);
+       NKBaseSDK.createInstance(this);
        NKBaseSDK.getInstance().init(this, "Game1-游戏ID", "我的游戏-游戏名", true,new MyListener());
        NKBaseSDK.getInstance().onCreate();
    }
    ```
-###3.2 生命周期接口
+### 3.2 生命周期接口（必接）
    在游戏各个Activity（除闪屏Activity外）生命周期中调用SDK生命周期接口：
    注意，onCreate需要在init之后调用
    ```
@@ -176,7 +179,7 @@ JAVA游戏客户端接入
        NKBaseSDK.getInstance().onActivityResult(requestCode,resultCode,data);
    }
    ```
-###3.3 登录接口
+### 3.3 登录接口（必接）
   ```
   NKBaseSDK.getInstance().login("Line1","线/区服名称");
   ```
@@ -185,7 +188,7 @@ JAVA游戏客户端接入
      lineName ：游戏线（区服）名称
    接口说明：
      初始化成功后才可以调用此接口。
-###3.4 支付接口
+### 3.4 支付接口（必接）
  ```
  NKBaseSDK.getInstance().pay(payInfo);
   ```
@@ -198,8 +201,6 @@ JAVA游戏客户端接入
                NKPayInfo payInfo = new NKPayInfo();
                //商品价格，单位为分
                payInfo.setAmount(64800);
-               //价格与游戏货币的兑换比例，1元对应多少游戏货币
-               payInfo.setExchangeRatio(100);
                //游戏货币的名称
                payInfo.setMoneyName("钻石");
                //游戏cp设置的充值透传参数
@@ -209,7 +210,7 @@ JAVA游戏客户端接入
                // 购买的产品名称
                payInfo.setProductName("648来一发");
   ```
-###3.5 退出接口
+### 3.5 退出接口（必接）
 ``` 
 NKBaseSDK.getInstance().quit() 
 ```  
@@ -226,24 +227,23 @@ NKBaseSDK.getInstance().quit()
                }
                else
                {
-// sdk渠道没有退出界面,游戏可以弹出自己的退出界面,玩家确认退出之后调用NKBaseSDK.getInstance().quit，或者没有退出界面直接调用
-//NKBaseSDK.getInstance().quit然后等待sdk的quit回调之后销毁游戏
-                 NKBaseSDK.getInstance().quit()
+                   //游戏自行控制退出逻辑
                }
 ```
-###3.6 登出接口
+### 3.6 登出接口（必接）
 ``` 
 NKBaseSDK.getInstance().logout()
 ```  
  接口说明：初始化成功后才可以调用此接口。调用之后会收到onLogout回调通知，再次调用登录界面时不会自动登录
-###3.7 用户中心接口
+### 3.7 用户中心接口（必接）
 ```
  NKBaseSDK.getInstance().userCenter()
 ```  
  接口说明：初始化成功后才可以调用此接口。调用之后会弹出用户中心界面，如果未登录则是弹出登录界面，cp可以在登录界面或者设置界面添加按钮调用此接口
-###3.8 登录成功后角色信息上传接口
+
+### 3.8 用户创建角色时接口（必接）
 ``` 
-NKBaseSDK.getInstance().roleLoggedIn(String roleID,String roleName,String roleLevel,String lineID,String lineName,String guildName,long roleCT,boolean createRole = false)
+NKBaseSDK.getInstance().createRole(String roleID, String roleName, String roleLevel, String lineID, String lineName, String guildName, long roleCT)
    参数说明：
      roleID ：角色ID
      roleName ：角色名称
@@ -252,10 +252,23 @@ NKBaseSDK.getInstance().roleLoggedIn(String roleID,String roleName,String roleLe
      lineName ：线服名称
      guildName ：公会名称
      roleCT ：角色创建Unix时间戳（秒）
-     createRole ： 是否创建角色操作，默认为false，既不是刚创建的新角色
 ```   
 接口说明：登陆成功后上传角色信息
-###3.9 角色升级后角色信息上传接口
+
+### 3.9 登录成功后角色信息上传接口（必接）
+``` 
+NKBaseSDK.getInstance().roleLoggedIn(String roleID,String roleName,String roleLevel,String lineID,String lineName,String guildName,long roleCT)
+   参数说明：
+     roleID ：角色ID
+     roleName ：角色名称
+     roleLevel ：角色等级
+     lineID ：线服ID
+     lineName ：线服名称
+     guildName ：公会名称
+     roleCT ：角色创建Unix时间戳（秒）
+```   
+接口说明：登陆成功后上传角色信息
+### 3.10 角色升级后角色信息上传接口（必接）
 ``` 
 NKBaseSDK.getInstance().roleLevelup(String roleID,String roleName,String roleLevel,String lineID,String lineName,String guildName,long roleCT)
    参数说明：
@@ -269,7 +282,7 @@ NKBaseSDK.getInstance().roleLevelup(String roleID,String roleName,String roleLev
 ```  
  接口说明： 角色升级后上传角色信息
  
-3.10 切换账号
+### 3.11 切换账号（必接）
 ------------------------------------------
 ```
 NKBaseSDK.getInstance().switchAccount(String lineID,String lineName)
@@ -279,41 +292,47 @@ NKBaseSDK.getInstance().switchAccount(String lineID,String lineName)
         lineName ：线服名称
 接口说明：
      切换账号
+     
+### 3.12 进入（开始）游戏 （必接）
+```
+NKBaseSDK.getInstance().enterGame()
+```  
+接口说明：进入（开始）游戏
 
 
 4 其他接口
 --------------------------
-###4.1获取渠道版本号
+### 4.1获取渠道版本号
 ``` 
 NKBaseSDK.getInstance().getVersion()
 ```  
  接口说明： 返回SDK的版本号（单独接入拟酷渠道时返回拟酷SDK版本号，接入拟酷平台打包全部渠道时返回各自渠道版本号）
-###4.2获取渠道ID
+### 4.2获取渠道ID
 ``` 
 NKBaseSDK.getInstance().getPlatformID();
 ```   
 接口说明： 返回SDK的渠道标识ID（单独接入拟酷渠道时无需使用此方法，接入拟酷平台打包全部渠道时有用）
-###4.3渠道是否有用户中心功能
+### 4.3渠道是否有用户中心功能
  ```
 NKBaseSDK.getInstance().hasUserCenter();
 ```
    接口说明：返回渠道是否有用户中心功能（单独接入拟酷渠道时无需使用此方法，接入拟酷平台打包全部渠道时有用）
-###4.4渠道是否有退出界面功能
+### 4.4渠道是否有退出界面功能
 ```
  NKBaseSDK.getInstance().hasQuitPanel();
 ```   
 接口说明: 返回渠道是否有退出界面功能（单独接入拟酷渠道时无需使用此方法，接入拟酷平台打包全部渠道时有用）
 
-5 回调接口 NKListener
+## 5 回调接口 NKListener（必接）
 ------------------------
 json object仅当errorcode 为0时才保证有效，如果errorcode不为0，请直接忽略json object
-###5.1 onInit
+### 5.1 onInit
  调用初始化接口后收到此回调
    参数说明：
      errorcode 为0表示成功，-1表示未知错误,
      json 格式如下
        {"result":0}
-###5.2 onLogin
+### 5.2 onLogin
  调用登录接口后收到此回调
    参数说明：
      errorcode 为0表示成功，-1表示未知错误,1表示用户取消（用户取消后请自行再次调用login或者等待用户再次点击登录按钮调用Login）
@@ -323,7 +342,7 @@ json object仅当errorcode 为0时才保证有效，如果errorcode不为0，请
  {"result":0,"uuid":"123456789","token":"asdfzxcvasdfqwer",
  "extra": {"uuid":"b95de17361f01369b2c3534176928b62","loginType":""}}
 ```
-###5.3 onLogout
+### 5.3 onLogout
  调用登出接口之后收到此回调
    参数说明：
      errorcode 为0表示成功，-1表示未知错误
@@ -331,7 +350,7 @@ json object仅当errorcode 为0时才保证有效，如果errorcode不为0，请
 ```
        {"result":0}
 ```
-###5.4 onPay
+### 5.4 onPay
  调用pay之后收到此回调
    参数说明：
      errorcode 为0表示成功，-1表示未知错误,1表示用户取消
@@ -339,7 +358,7 @@ json object仅当errorcode 为0时才保证有效，如果errorcode不为0，请
 ```   
     {"result":0,"orderID":"nk12345678"}
 ```
-###5.5 onQuit
+### 5.5 onQuit
  调用登出接口之后收到此回调
    参数说明：
      errorcode 为0表示成功，-1表示未知错误
